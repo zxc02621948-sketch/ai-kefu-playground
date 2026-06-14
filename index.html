@@ -216,6 +216,7 @@
     body { display: block; }
   }
 </style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 <div id="app">
@@ -225,6 +226,8 @@
   </header>
 
   <div id="messages"></div>
+
+  <div id="cf-turnstile" style="display:flex;justify-content:center;padding:6px 0 0;"></div>
 
   <div id="input-bar">
     <input id="chat-input" type="text" placeholder="輸入訊息…" maxlength="500" autocomplete="off">
@@ -239,9 +242,23 @@
 <script>
 (function () {
   /* ════════ 設定區：只需要改這兩行 ════════ */
-  const WEBHOOK_URL  = 'https://boss-n8n.zeabur.app/webhook/playground-chat';
+  const WEBHOOK_URL  = 'https://kefu-gate.zxc02621948.workers.dev';
   const CONTACT_URL  = 'https://www.threads.net/@aicreateaworld'; // 改成你要接洽的入口（Threads/FB/LINE）
+  const TURNSTILE_SITEKEY = '0x4AAAAAADkdGWequXxB-oSF';
   /* ══════════════════════════════════════ */
+
+  // ── Cloudflare Turnstile（擋腳本/機器人洪水）──
+  let cfToken = null, cfWidgetId = null;
+  window.__renderTurnstile = function () {
+    if (!window.turnstile) { setTimeout(window.__renderTurnstile, 200); return; }
+    if (cfWidgetId !== null) return;
+    cfWidgetId = window.turnstile.render('#cf-turnstile', {
+      sitekey: TURNSTILE_SITEKEY,
+      callback: function (t) { cfToken = t; },
+      'expired-callback': function () { cfToken = null; try { window.turnstile.reset(cfWidgetId); } catch (e) {} },
+      'error-callback': function () { cfToken = null; },
+    });
+  };
 
   document.getElementById('contact-link').href = CONTACT_URL;
 
@@ -279,12 +296,12 @@
 
   // 開場：本地歡迎訊息＋兩張場景卡（點了就替玩家送出 1 / 2）
   function showWelcome() {
-    addMsg('bot', '歡迎來到 AI 客服遊樂場 🎮\n你有 10 句的體驗額度（12 小時重置）。\n選一個場景開始：');
+    addMsg('bot', '歡迎來玩 AI 客服遊樂場 🎮\n你是這家裝修店的客人，我是店家的 AI 客服。\n你有 10 句體驗額度（12 小時重置），選個玩法開始：');
     const wrap = document.createElement('div');
     wrap.id = 'scenarios';
     wrap.innerHTML = `
-      <button class="scenario-card" data-pick="1"><b>① 問問這套 AI 客服</b>怎麼運作、多少錢、可不可靠——儘管問，你現在對話的就是產品本人。</button>
-      <button class="scenario-card" data-pick="2"><b>② 你當裝修店的客人</b>體驗真實部署過的店家客服——問報價、問工程、當奧客都歡迎 😏</button>
+      <button class="scenario-card" data-pick="1"><b>① 一般客人</b>問報價、問工程、問進度——隨便問，看這個真實部署過的 AI 客服怎麼接。</button>
+      <button class="scenario-card" data-pick="2"><b>② 來亂的奧客 😏</b>盡量刁難它、亂問、挑剔——看它接不接得住。</button>
     `;
     messagesEl.appendChild(wrap);
     wrap.querySelectorAll('.scenario-card').forEach(btn => {
@@ -304,6 +321,11 @@
     inputEl.value = '';
     showTyping();
 
+    // 取本次的 Turnstile token，並重置取得下一個（每則訊息一次性）
+    const sendToken = cfToken;
+    cfToken = null;
+    try { if (cfWidgetId !== null && window.turnstile) window.turnstile.reset(cfWidgetId); } catch (e) {}
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -311,7 +333,7 @@
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, session_id: uid }),
+        body: JSON.stringify({ message: text, session_id: uid, cf_token: sendToken }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -343,6 +365,7 @@
   });
 
   showWelcome();
+  window.__renderTurnstile();
 })();
 </script>
 </body>
