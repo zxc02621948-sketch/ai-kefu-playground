@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>AI 客服遊樂場｜來當奧客，試試問不問得倒它</title>
-<meta name="description" content="一套真實部署過的 AI 智能客服，開放試玩。你當客人，它接客——額度 10 句，看它怎麼接住你。">
-<!-- 社群分享預覽（Threads/FB 連結卡片） -->
-<meta property="og:title" content="AI 客服遊樂場｜來當奧客，試試問不問得倒它">
-<meta property="og:description" content="真實部署過的 AI 智能客服開放試玩。你當客人，它接客。">
+<title>AI Customer Service Playground — try to stump it</title>
+<meta name="description" content="A real, deployed AI customer-service agent, open to try. You're the customer, it handles you — 10 messages, see how it holds up.">
+<!-- Social share preview (Threads/FB link card) -->
+<meta property="og:title" content="AI Customer Service Playground — try to stump it">
+<meta property="og:description" content="A real, deployed AI customer-service agent, open to try. You're the customer, it handles you.">
 <meta property="og:type" content="website">
-<!-- TODO: 之後補一張 og:image（1200x630）讓連結卡片更好看 -->
+<!-- TODO: add an og:image (1200x630) for a nicer link card -->
 <style>
   :root {
     --bg: #0d1117;
@@ -32,7 +32,7 @@
     flex-direction: column;
   }
 
-  /* ── 頂部 ── */
+  /* ── Header ── */
   header {
     padding: 14px 18px 12px;
     border-bottom: 1px solid var(--border);
@@ -60,7 +60,7 @@
     color: var(--text-dim);
   }
 
-  /* ── 訊息區 ── */
+  /* ── Messages ── */
   #messages {
     flex: 1;
     overflow-y: auto;
@@ -92,6 +92,7 @@
     background: var(--user-bubble);
     border-bottom-right-radius: 4px;
   }
+  .msg.user img { display: block; max-width: 200px; border-radius: 8px; margin-top: 6px; }
   .msg.system {
     align-self: center;
     background: transparent;
@@ -100,7 +101,7 @@
     padding: 2px 8px;
   }
 
-  /* 打字中 */
+  /* Typing */
   .typing {
     align-self: flex-start;
     display: flex;
@@ -121,7 +122,7 @@
   .typing span:nth-child(3) { animation-delay: .4s; }
   @keyframes blink { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
 
-  /* ── 場景卡 ── */
+  /* ── Scenario cards ── */
   #scenarios {
     display: flex;
     flex-direction: column;
@@ -148,7 +149,20 @@
   }
   .scenario-card b { color: var(--accent); display: block; margin-bottom: 3px; font-size: .95rem; }
 
-  /* ── 輸入列 ── */
+  /* ── Image preview (above input bar) ── */
+  #img-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  #img-preview img { height: 46px; border-radius: 6px; border: 1px solid var(--border); }
+  #img-preview button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: .82rem; }
+
+  /* ── Input bar ── */
   #input-bar {
     flex-shrink: 0;
     display: flex;
@@ -157,13 +171,26 @@
     border-top: 1px solid var(--border);
     background: var(--panel);
   }
+  #attach-btn {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: filter .15s, transform .1s;
+  }
+  #attach-btn:hover { filter: brightness(1.2); }
+  #attach-btn:active { transform: scale(.94); }
   #chat-input {
     flex: 1;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 22px;
     color: var(--text);
-    font-size: 16px; /* 16px 防 iOS 自動縮放 */
+    font-size: 16px; /* 16px stops iOS auto-zoom */
     font-family: inherit;
     padding: 10px 16px;
     outline: none;
@@ -184,7 +211,7 @@
   #send-btn:active:not(:disabled) { transform: scale(.94); }
   #send-btn:disabled { filter: grayscale(.8) brightness(.6); cursor: default; }
 
-  /* ── 底部一行 ── */
+  /* ── Footer ── */
   footer {
     flex-shrink: 0;
     text-align: center;
@@ -196,7 +223,7 @@
   footer a { color: var(--accent); text-decoration: none; }
 
   @media (min-width: 720px) {
-    /* 桌面置中卡片化 */
+    /* Desktop: centered card */
     body { align-items: center; justify-content: center; background: #090d12; padding: 24px; }
     #app {
       width: 100%;
@@ -221,8 +248,8 @@
 <body>
 <div id="app">
   <header>
-    <h1><span class="dot"></span>AI 客服遊樂場</h1>
-    <p>真實部署過的 AI 智能客服，開放試玩——你當客人，它接客。每人 10 句額度。</p>
+    <h1><span class="dot"></span>AI Customer Service Playground</h1>
+    <p>A real, deployed AI customer-service agent — open to try. You're the customer, it handles you. 10 messages each.</p>
   </header>
 
   <div id="messages"></div>
@@ -230,24 +257,26 @@
   <div id="cf-turnstile" style="display:flex;justify-content:center;padding:6px 0 0;"></div>
 
   <div id="input-bar">
-    <input id="chat-input" type="text" placeholder="輸入訊息…" maxlength="500" autocomplete="off">
-    <button id="send-btn" aria-label="送出">➤</button>
+    <input id="file-input" type="file" accept="image/*" style="display:none">
+    <button id="attach-btn" type="button" aria-label="Attach photo" title="Send a photo">📷</button>
+    <input id="chat-input" type="text" placeholder="Type a message…" maxlength="500" autocomplete="off">
+    <button id="send-btn" aria-label="Send">➤</button>
   </div>
 
   <footer>
-    此系統實際部署於店家粉專與官網私訊。想要你的店的版本？<a id="contact-link" href="#" target="_blank" rel="noopener">聯絡我們 ›</a>
+    This system runs live on real shops' DMs and websites. Want one for your business? <a id="contact-link" href="#" target="_blank" rel="noopener">Contact us ›</a>
   </footer>
 </div>
 
 <script>
 (function () {
-  /* ════════ 設定區：只需要改這兩行 ════════ */
+  /* ════════ Config: only these two lines ════════ */
   const WEBHOOK_URL  = 'https://kefu-gate.zxc02621948.workers.dev';
-  const CONTACT_URL  = 'https://www.facebook.com/profile.php?id=61573305406231'; // AI創界粉專（之後設好用戶名稱可升級成 m.me/帳號）
+  const CONTACT_URL  = 'https://www.facebook.com/profile.php?id=61573305406231'; // AI創界 page (can upgrade to m.me/username later)
   const TURNSTILE_SITEKEY = '0x4AAAAAADkdGWequXxB-oSF';
   /* ══════════════════════════════════════ */
 
-  // ── Cloudflare Turnstile（擋腳本/機器人洪水）──
+  // ── Cloudflare Turnstile (blocks bot/script floods) ──
   let cfToken = null, cfWidgetId = null;
   window.__renderTurnstile = function () {
     if (!window.turnstile) { setTimeout(window.__renderTurnstile, 200); return; }
@@ -265,8 +294,10 @@
   const messagesEl = document.getElementById('messages');
   const inputEl = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
+  const fileInput = document.getElementById('file-input');
+  const attachBtn = document.getElementById('attach-btn');
 
-  // 訪客身分：localStorage uuid → 後端 session_id（額度與記憶都掛在這個 key 上）
+  // Visitor identity: localStorage uuid → backend session_id (quota & memory hang on this key)
   let uid = localStorage.getItem('playground_uid');
   if (!uid) {
     uid = (crypto.randomUUID ? crypto.randomUUID() : 'pg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
@@ -274,6 +305,7 @@
   }
 
   let busy = false;
+  let pendingImage = null; // resized base64 data URL, or null
 
   function addMsg(role, text) {
     const div = document.createElement('div');
@@ -294,14 +326,69 @@
   }
   function hideTyping() { document.getElementById('typing')?.remove(); }
 
-  // 開場：本地歡迎訊息＋兩張場景卡（點了就替玩家送出 1 / 2）
+  // ── Image attach: read → downscale → base64 data URL ──
+  attachBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    fileInput.value = ''; // allow re-picking the same file
+    if (!file) return;
+    try {
+      pendingImage = await resizeToDataURL(file, 1024, 0.8);
+      showThumb(pendingImage);
+    } catch (e) { console.error('[img]', e); }
+  });
+
+  function resizeToDataURL(file, maxSide, quality) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxSide || h > maxSide) {
+          const r = Math.min(maxSide / w, maxSide / h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      const fr = new FileReader();
+      fr.onload = () => { img.src = fr.result; };
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function showThumb(dataUrl) {
+    let bar = document.getElementById('img-preview');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'img-preview';
+      document.getElementById('input-bar').insertAdjacentElement('beforebegin', bar);
+    }
+    bar.innerHTML = '';
+    const im = document.createElement('img'); im.src = dataUrl;
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '✕ remove';
+    x.onclick = clearPendingImage;
+    bar.append(im, x);
+    bar.style.display = 'flex';
+  }
+
+  function clearPendingImage() {
+    pendingImage = null;
+    const bar = document.getElementById('img-preview');
+    if (bar) { bar.style.display = 'none'; bar.innerHTML = ''; }
+  }
+
+  // Opening: local welcome + two scenario cards (clicking sends 1 / 2 for the player)
   function showWelcome() {
-    addMsg('bot', '歡迎來玩 AI 客服遊樂場 🎮\n你是這家裝修店的客人，我是店家的 AI 客服。\n你有 10 句體驗額度（12 小時重置）。玩到最後，看看你隨口聊的幾句，AI 會幫你判讀成什麼 👀\n選個玩法開始：');
+    addMsg('bot', "Welcome to the AI Customer Service Playground 🎮\nYou're a customer of this renovation company, and I'm the shop's AI assistant.\nYou have 10 trial messages (resets in 12h). At the end, see what the AI read from your casual chat 👀\nPick a mode to start:");
     const wrap = document.createElement('div');
     wrap.id = 'scenarios';
     wrap.innerHTML = `
-      <button class="scenario-card" data-pick="1"><b>① 一般客人</b>問報價、問工程、問進度——隨便問，看這個真實部署過的 AI 客服怎麼接。</button>
-      <button class="scenario-card" data-pick="2"><b>② 來亂的奧客 😏</b>盡量刁難它、亂問、挑剔——看它接不接得住。</button>
+      <button class="scenario-card" data-pick="1"><b>① Regular customer</b>Ask about quotes, projects, timelines — anything. See how this real, deployed AI handles it.</button>
+      <button class="scenario-card" data-pick="2"><b>② Difficult customer 😏</b>Try to trip it up, ask odd things, be picky — see if it holds.</button>
     `;
     messagesEl.appendChild(wrap);
     wrap.querySelectorAll('.scenario-card').forEach(btn => {
@@ -314,14 +401,21 @@
 
   async function send(text) {
     text = (text || '').trim();
-    if (!text || busy) return;
+    if ((!text && !pendingImage) || busy) return;
     busy = true;
     sendBtn.disabled = true;
-    addMsg('user', text);
+    const userMsg = addMsg('user', text);
+    const imageToSend = pendingImage;
+    if (imageToSend) {
+      const im = document.createElement('img');
+      im.src = imageToSend;
+      userMsg.appendChild(im);
+    }
+    clearPendingImage();
     inputEl.value = '';
     showTyping();
 
-    // 取本次的 Turnstile token，並重置取得下一個（每則訊息一次性）
+    // Grab this message's Turnstile token, then reset for the next (one-time per message)
     const sendToken = cfToken;
     cfToken = null;
     try { if (cfWidgetId !== null && window.turnstile) window.turnstile.reset(cfWidgetId); } catch (e) {}
@@ -333,7 +427,7 @@
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, session_id: uid, cf_token: sendToken }),
+        body: JSON.stringify({ message: text, session_id: uid, cf_token: sendToken, image: imageToSend || null }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -349,8 +443,8 @@
     } catch (err) {
       hideTyping();
       addMsg('system', err.name === 'AbortError'
-        ? '回覆超時了，請再試一次 🙏'
-        : '服務暫時沒有回應，請稍後再試 🙏');
+        ? 'Response timed out — please try again 🙏'
+        : "The service isn't responding right now — please try again shortly 🙏");
       console.error('[Playground]', err);
     } finally {
       busy = false;
