@@ -1,0 +1,4 @@
+# local dev / editor helpers
+.claude/
+# backups
+*.bak

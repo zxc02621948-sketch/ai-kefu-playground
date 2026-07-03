@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>AI Customer Service Playground — try to stump it</title>
-<meta name="description" content="A real, deployed AI customer-service agent, open to try. You're the customer, it handles you — 10 messages, see how it holds up.">
+<title>AI 客服體驗場 — 來考倒它</title>
+<meta name="description" content="一個真正上線中的 AI 客服，開放試玩。你是客人，它來接待你 — 10 則訊息，看它接不接得住。">
 <!-- Social share preview (Threads/FB link card) -->
-<meta property="og:title" content="AI Customer Service Playground — try to stump it">
-<meta property="og:description" content="A real, deployed AI customer-service agent, open to try. You're the customer, it handles you.">
+<meta property="og:title" content="AI 客服體驗場 — 來考倒它 / AI Customer Service Playground">
+<meta property="og:description" content="一個真正上線中的 AI 客服，開放試玩。你是客人，它來接待你。">
 <meta property="og:type" content="website">
 <!-- TODO: add an og:image (1200x630) for a nicer link card -->
 <style>
@@ -38,7 +38,11 @@
     border-bottom: 1px solid var(--border);
     background: var(--panel);
     flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
   }
+  .head-main { flex: 1; min-width: 0; }
   header h1 {
     font-size: 1.05rem;
     letter-spacing: .04em;
@@ -52,6 +56,7 @@
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent);
     animation: breathe 2.2s ease-in-out infinite alternate;
+    flex-shrink: 0;
   }
   @keyframes breathe { from { opacity: .55; } to { opacity: 1; } }
   header p {
@@ -59,6 +64,32 @@
     font-size: .8rem;
     color: var(--text-dim);
   }
+
+  /* ── Language toggle ── */
+  .lang-toggle {
+    flex-shrink: 0;
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .lang-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .lang-toggle button.active {
+    background: var(--accent);
+    color: #08110e;
+  }
+  .lang-toggle button:not(.active):hover { color: var(--text); }
 
   /* ── Messages ── */
   #messages {
@@ -222,6 +253,75 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
 
+  /* ── Collecting indicator (aggregation) ── */
+  .collecting {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+    font-size: .82rem;
+    color: var(--text-dim);
+  }
+  .collecting .dots { display: inline-flex; gap: 4px; }
+  .collecting .dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-dim); animation: blink 1.2s infinite;
+  }
+  .collecting .dots span:nth-child(2) { animation-delay: .2s; }
+  .collecting .dots span:nth-child(3) { animation-delay: .4s; }
+
+  /* ── Behind-the-scenes toggle button ── */
+  #bts-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: .74rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  #bts-btn:hover { color: var(--text); }
+  #bts-btn.active { color: #08110e; background: var(--accent); border-color: var(--accent); }
+  #bts-btn .newdot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px var(--accent);
+    display: none;
+  }
+  #bts-btn.has-new .newdot { display: inline-block; }
+  #bts-btn.active .newdot { display: none; }
+
+  /* ── Behind-the-scenes panel ── */
+  #bts-panel {
+    display: none;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+    padding: 10px 14px 12px;
+    max-height: 42%;
+    overflow-y: auto;
+  }
+  #bts-panel.open { display: block; }
+  #bts-panel .bts-title {
+    font-size: .74rem; letter-spacing: .03em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 8px; font-weight: 700;
+  }
+  #bts-panel .bts-hint { font-size: .8rem; color: var(--text-dim); line-height: 1.5; }
+  #bts-panel .bts-grid { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: .82rem; }
+  #bts-panel .bts-k { color: var(--text-dim); white-space: nowrap; }
+  #bts-panel .bts-v { color: var(--text); word-break: break-word; }
+  #bts-panel .bts-v.code { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--accent); font-size: .78rem; }
+  #bts-panel .bts-v.empty { color: var(--text-dim); }
+
   @media (min-width: 720px) {
     /* Desktop: centered card */
     body { align-items: center; justify-content: center; background: #090d12; padding: 24px; }
@@ -248,9 +348,18 @@
 <body>
 <div id="app">
   <header>
-    <h1><span class="dot"></span>AI Customer Service Playground</h1>
-    <p>A real, deployed AI customer-service agent — open to try. You're the customer, it handles you. 10 messages each.</p>
+    <div class="head-main">
+      <h1><span class="dot"></span><span id="h-title"></span></h1>
+      <p id="h-sub"></p>
+    </div>
+    <button id="bts-btn" type="button"><span>🔍</span><span id="bts-btn-label"></span><span class="newdot"></span></button>
+    <div class="lang-toggle" role="group" aria-label="Language / 語言">
+      <button type="button" data-lang="zh">中</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
   </header>
+
+  <div id="bts-panel"></div>
 
   <div id="messages"></div>
 
@@ -258,23 +367,97 @@
 
   <div id="input-bar">
     <input id="file-input" type="file" accept="image/*" style="display:none">
-    <button id="attach-btn" type="button" aria-label="Attach photo" title="Send a photo">📷</button>
-    <input id="chat-input" type="text" placeholder="Type a message…" maxlength="500" autocomplete="off">
+    <button id="attach-btn" type="button">📷</button>
+    <input id="chat-input" type="text" maxlength="500" autocomplete="off">
     <button id="send-btn" aria-label="Send">➤</button>
   </div>
 
   <footer>
-    This system runs live on real shops' DMs and websites. Want one for your business? <a id="contact-link" href="#" target="_blank" rel="noopener">Contact us ›</a>
+    <span id="foot-text"></span> <a id="contact-link" href="#" target="_blank" rel="noopener"></a>
   </footer>
 </div>
 
 <script>
 (function () {
-  /* ════════ Config: only these two lines ════════ */
+  /* ════════ Config: only these lines ════════ */
   const WEBHOOK_URL  = 'https://kefu-gate.zxc02621948.workers.dev';
   const CONTACT_URL  = 'https://www.facebook.com/profile.php?id=61573305406231'; // AI創界 page (can upgrade to m.me/username later)
   const TURNSTILE_SITEKEY = '0x4AAAAAADkdGWequXxB-oSF';
   /* ══════════════════════════════════════ */
+
+  /* ════════ i18n: 繁體中文 / English ════════ */
+  const I18N = {
+    zh: {
+      htmlLang: 'zh-Hant',
+      docTitle: 'AI 客服體驗場 — 來考倒它',
+      headerTitle: 'AI 客服體驗場',
+      headerSub: '一個真正上線中的 AI 客服 — 開放試玩。你是客人，它來接待你，每人 10 則訊息。',
+      placeholder: '輸入訊息…',
+      attachTitle: '傳一張照片',
+      attachAria: '附加照片',
+      footText: '這套系統正實際跑在店家的私訊與網站上。想幫你的生意也弄一個嗎？',
+      contact: '聯絡我們 ›',
+      welcome: 'AI 客服體驗場 🎮\n你是這家裝修公司的客人，我是店家的 AI 助理。\n你有 10 則試玩訊息（12 小時後重置）。玩到最後，看看 AI 從你的閒聊裡讀出了什麼 👀\n選一個模式開始：',
+      card1Title: '① 一般客人',
+      card1Body: '問報價、工程、工期 — 什麼都行。看看這個真正上線的 AI 怎麼接。',
+      card2Title: '② 奧客模式 😏',
+      card2Body: '想辦法為難它、問些怪問題、挑剔一點 — 看它接不接得住。',
+      removeBtn: '✕ 移除',
+      timeoutErr: '回應逾時 — 請再試一次 🙏',
+      serviceErr: '服務目前沒有回應 — 請稍後再試一次 🙏',
+      understanding: '理解中…',
+      collecting: '收到 {n} 則，一起理解中…',
+      btsToggle: '幕後',
+      btsTitle: '幕後判讀（AI 讀到什麼）',
+      btsHint: '送出訊息後，這裡會即時顯示 AI 對整段對話的判讀結果。',
+      btsCaseType: '判定類型',
+      btsNextAction: '下一步',
+      btsName: '姓名',
+      btsPhone: '電話',
+      btsArea: '地區',
+      btsTime: '方便聯絡時間',
+      btsSummary: '需求摘要',
+    },
+    en: {
+      htmlLang: 'en',
+      docTitle: 'AI Customer Service Playground — try to stump it',
+      headerTitle: 'AI Customer Service Playground',
+      headerSub: "A real, deployed AI customer-service agent — open to try. You're the customer, it handles you. 10 messages each.",
+      placeholder: 'Type a message…',
+      attachTitle: 'Send a photo',
+      attachAria: 'Attach photo',
+      footText: "This system runs live on real shops' DMs and websites. Want one for your business?",
+      contact: 'Contact us ›',
+      welcome: "Welcome to the AI Customer Service Playground 🎮\nYou're a customer of this renovation company, and I'm the shop's AI assistant.\nYou have 10 trial messages (resets in 12h). At the end, see what the AI read from your casual chat 👀\nPick a mode to start:",
+      card1Title: '① Regular customer',
+      card1Body: 'Ask about quotes, projects, timelines — anything. See how this real, deployed AI handles it.',
+      card2Title: '② Difficult customer 😏',
+      card2Body: 'Try to trip it up, ask odd things, be picky — see if it holds.',
+      removeBtn: '✕ remove',
+      timeoutErr: 'Response timed out — please try again 🙏',
+      serviceErr: "The service isn't responding right now — please try again shortly 🙏",
+      understanding: 'Understanding…',
+      collecting: 'Got {n} messages — understanding them together…',
+      btsToggle: 'Inside',
+      btsTitle: 'Behind the scenes (what the AI read)',
+      btsHint: "After you send, the AI's live read of the whole conversation shows up here.",
+      btsCaseType: 'Case type',
+      btsNextAction: 'Next action',
+      btsName: 'Name',
+      btsPhone: 'Phone',
+      btsArea: 'Area',
+      btsTime: 'Preferred time',
+      btsSummary: 'Case summary',
+    },
+  };
+  // 初始語言優先序：?lang= 網址參數（分市場連結用）> localStorage（回訪者選過的）> 頁面預設 > 繁中
+  const _qLang = new URLSearchParams(location.search).get('lang');
+  let lang = (_qLang === 'zh' || _qLang === 'en')
+    ? _qLang
+    : (localStorage.getItem('playground_lang') || window.PG_DEFAULT_LANG);
+  if (lang !== 'zh' && lang !== 'en') lang = 'zh'; // 預設繁體中文
+  localStorage.setItem('playground_lang', lang);
+  const t = () => I18N[lang];
 
   // ── Cloudflare Turnstile (blocks bot/script floods) ──
   let cfToken = null, cfWidgetId = null;
@@ -289,13 +472,50 @@
     });
   };
 
-  document.getElementById('contact-link').href = CONTACT_URL;
-
   const messagesEl = document.getElementById('messages');
   const inputEl = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
   const fileInput = document.getElementById('file-input');
   const attachBtn = document.getElementById('attach-btn');
+
+  // ── Apply all static UI text for the current language ──
+  function applyStaticText() {
+    const s = t();
+    document.documentElement.lang = s.htmlLang;
+    document.title = s.docTitle;
+    document.getElementById('h-title').textContent = s.headerTitle;
+    document.getElementById('h-sub').textContent = s.headerSub;
+    inputEl.placeholder = s.placeholder;
+    attachBtn.title = s.attachTitle;
+    attachBtn.setAttribute('aria-label', s.attachAria);
+    document.getElementById('foot-text').textContent = s.footText;
+    const c = document.getElementById('contact-link');
+    c.textContent = s.contact;
+    c.href = CONTACT_URL;
+    document.querySelectorAll('.lang-toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    renderPanel();
+  }
+
+  function setLang(l) {
+    if (l === lang) return;
+    lang = l;
+    localStorage.setItem('playground_lang', l);
+    // 乾淨重開場（避免中英混雜的對話），配額仍綁 session_id 不受影響
+    stopPolling();
+    pendingCount = 0;
+    lastMeta = null;
+    btsBtn.classList.remove('has-new');
+    clearPendingImage();
+    messagesEl.innerHTML = '';
+    applyStaticText();
+    showWelcome();
+  }
+
+  document.querySelectorAll('.lang-toggle button').forEach(b => {
+    b.addEventListener('click', () => setLang(b.dataset.lang));
+  });
 
   // Visitor identity: localStorage uuid → backend session_id (quota & memory hang on this key)
   let uid = localStorage.getItem('playground_uid');
@@ -304,8 +524,19 @@
     localStorage.setItem('playground_uid', uid);
   }
 
-  let busy = false;
   let pendingImage = null; // resized base64 data URL, or null
+  let sinceSeq = Number(localStorage.getItem('playground_seq') || 0) || 0;
+  let pollTimer = null;
+  let pollDeadline = 0;
+  let pendingCount = 0;   // proceed messages awaiting one aggregated reply
+  let lastMeta = null;    // last behind-the-scenes read
+
+  const btsBtn = document.getElementById('bts-btn');
+  const btsPanel = document.getElementById('bts-panel');
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
 
   function addMsg(role, text) {
     const div = document.createElement('div');
@@ -316,15 +547,99 @@
     return div;
   }
 
-  function showTyping() {
-    const t = document.createElement('div');
-    t.className = 'typing';
-    t.id = 'typing';
-    t.innerHTML = '<span></span><span></span><span></span>';
-    messagesEl.appendChild(t);
+  // Thinking / aggregation indicator. n>1 → show "collecting N messages…"
+  function showThinking(n) {
+    hideTyping();
+    const el = document.createElement('div');
+    el.className = 'collecting';
+    el.id = 'typing';
+    const label = document.createElement('span');
+    label.textContent = (n > 1) ? t().collecting.replace('{n}', n) : t().understanding;
+    const dots = document.createElement('span');
+    dots.className = 'dots';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    el.append(label, dots);
+    messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
   function hideTyping() { document.getElementById('typing')?.remove(); }
+
+  // ── Behind-the-scenes panel ──
+  function renderPanel() {
+    const s = t();
+    document.getElementById('bts-btn-label').textContent = s.btsToggle;
+    btsBtn.title = s.btsTitle;
+    if (!lastMeta) {
+      btsPanel.innerHTML = '<div class="bts-title">' + escapeHtml(s.btsTitle) + '</div>'
+        + '<div class="bts-hint">' + escapeHtml(s.btsHint) + '</div>';
+      return;
+    }
+    const m = lastMeta;
+    const slots = m.slots || {};
+    const row = (k, v, code) => {
+      const empty = (v === null || v === undefined || v === '');
+      const cls = 'bts-v' + (code ? ' code' : '') + (empty ? ' empty' : '');
+      return '<div class="bts-k">' + escapeHtml(k) + '</div>'
+        + '<div class="' + cls + '">' + escapeHtml(empty ? '—' : String(v)) + '</div>';
+    };
+    btsPanel.innerHTML = '<div class="bts-title">' + escapeHtml(s.btsTitle) + '</div>'
+      + '<div class="bts-grid">'
+      + row(s.btsCaseType, m.case_type, true)
+      + row(s.btsNextAction, m.next_action, true)
+      + row(s.btsName, slots.name)
+      + row(s.btsPhone, slots.phone)
+      + row(s.btsArea, slots.area)
+      + row(s.btsTime, slots.callback_time)
+      + row(s.btsSummary, m.summary)
+      + '</div>';
+  }
+
+  function updatePanel(meta) {
+    lastMeta = meta || null;
+    renderPanel();
+    if (!btsPanel.classList.contains('open')) btsBtn.classList.add('has-new');
+  }
+
+  btsBtn.addEventListener('click', () => {
+    const open = btsPanel.classList.toggle('open');
+    btsBtn.classList.toggle('active', open);
+    if (open) btsBtn.classList.remove('has-new');
+  });
+
+  // ── Polling for the aggregated reply (async ack model) ──
+  function startPolling() {
+    pollDeadline = Date.now() + 35000;
+    if (pollTimer) return;
+    pollTimer = setInterval(pollOnce, 1200);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+  async function pollOnce() {
+    if (Date.now() > pollDeadline) {
+      stopPolling();
+      if (pendingCount > 0) { hideTyping(); addMsg('system', t().serviceErr); pendingCount = 0; }
+      return;
+    }
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'poll', session_id: uid, since_seq: sinceSeq }),
+      });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      if (data && data.ready) {
+        sinceSeq = Number(data.seq) || sinceSeq;
+        localStorage.setItem('playground_seq', String(sinceSeq));
+        stopPolling();
+        hideTyping();
+        addMsg('bot', data.reply || '');
+        if (data.meta) updatePanel(data.meta);
+        pendingCount = 0;
+      }
+    } catch (e) { /* transient — keep polling */ }
+  }
 
   // ── Image attach: read → downscale → base64 data URL ──
   attachBtn.addEventListener('click', () => fileInput.click());
@@ -369,7 +684,7 @@
     }
     bar.innerHTML = '';
     const im = document.createElement('img'); im.src = dataUrl;
-    const x = document.createElement('button'); x.type = 'button'; x.textContent = '✕ remove';
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = t().removeBtn;
     x.onclick = clearPendingImage;
     bar.append(im, x);
     bar.style.display = 'flex';
@@ -383,13 +698,21 @@
 
   // Opening: local welcome + two scenario cards (clicking sends 1 / 2 for the player)
   function showWelcome() {
-    addMsg('bot', "Welcome to the AI Customer Service Playground 🎮\nYou're a customer of this renovation company, and I'm the shop's AI assistant.\nYou have 10 trial messages (resets in 12h). At the end, see what the AI read from your casual chat 👀\nPick a mode to start:");
+    const s = t();
+    addMsg('bot', s.welcome);
     const wrap = document.createElement('div');
     wrap.id = 'scenarios';
-    wrap.innerHTML = `
-      <button class="scenario-card" data-pick="1"><b>① Regular customer</b>Ask about quotes, projects, timelines — anything. See how this real, deployed AI handles it.</button>
-      <button class="scenario-card" data-pick="2"><b>② Difficult customer 😏</b>Try to trip it up, ask odd things, be picky — see if it holds.</button>
-    `;
+    const c1 = document.createElement('button');
+    c1.className = 'scenario-card'; c1.dataset.pick = '1';
+    c1.innerHTML = '<b></b>';
+    c1.querySelector('b').textContent = s.card1Title;
+    c1.appendChild(document.createTextNode(s.card1Body));
+    const c2 = document.createElement('button');
+    c2.className = 'scenario-card'; c2.dataset.pick = '2';
+    c2.innerHTML = '<b></b>';
+    c2.querySelector('b').textContent = s.card2Title;
+    c2.appendChild(document.createTextNode(s.card2Body));
+    wrap.append(c1, c2);
     messagesEl.appendChild(wrap);
     wrap.querySelectorAll('.scenario-card').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -399,11 +722,12 @@
     });
   }
 
+  // No hard lock — you can fire several messages in a row (that's what triggers
+  // the backend's debounce + aggregation). Proceed replies come back via polling.
   async function send(text) {
     text = (text || '').trim();
-    if ((!text && !pendingImage) || busy) return;
-    busy = true;
-    sendBtn.disabled = true;
+    if (!text && !pendingImage) return;
+
     const userMsg = addMsg('user', text);
     const imageToSend = pendingImage;
     if (imageToSend) {
@@ -413,12 +737,14 @@
     }
     clearPendingImage();
     inputEl.value = '';
-    showTyping();
 
     // Grab this message's Turnstile token, then reset for the next (one-time per message)
     const sendToken = cfToken;
     cfToken = null;
     try { if (cfWidgetId !== null && window.turnstile) window.turnstile.reset(cfWidgetId); } catch (e) {}
+
+    // Optimistic indicator (updated once we know if this is a sync reply or a proceed ack)
+    showThinking(pendingCount ? pendingCount + 1 : 0);
 
     try {
       const controller = new AbortController();
@@ -427,7 +753,7 @@
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, session_id: uid, cf_token: sendToken, image: imageToSend || null }),
+        body: JSON.stringify({ action: 'send', message: text, session_id: uid, cf_token: sendToken, image: imageToSend || null, lang: lang }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -436,19 +762,25 @@
       const raw = await res.text();
       let data = {};
       try { data = JSON.parse(raw); } catch (e) {}
-      const reply = data.reply || data.output || '';
-      hideTyping();
-      if (!reply) throw new Error('empty reply');
-      addMsg('bot', reply);
+
+      if (data && data.ack) {
+        // Proceed route → message buffered; worker will aggregate. Poll for the reply.
+        pendingCount++;
+        showThinking(pendingCount);
+        startPolling();
+      } else if (data && (data.reply || data.output)) {
+        // Synchronous route (menu / scenario confirm / cooldown demo summary)
+        hideTyping();
+        addMsg('bot', data.reply || data.output);
+      } else {
+        hideTyping();
+        addMsg('system', t().serviceErr);
+      }
     } catch (err) {
       hideTyping();
-      addMsg('system', err.name === 'AbortError'
-        ? 'Response timed out — please try again 🙏'
-        : "The service isn't responding right now — please try again shortly 🙏");
+      addMsg('system', err.name === 'AbortError' ? t().timeoutErr : t().serviceErr);
       console.error('[Playground]', err);
     } finally {
-      busy = false;
-      sendBtn.disabled = false;
       inputEl.focus();
     }
   }
@@ -458,6 +790,7 @@
     if (e.key === 'Enter' && !e.isComposing) send(inputEl.value);
   });
 
+  applyStaticText();
   showWelcome();
   window.__renderTurnstile();
 })();
