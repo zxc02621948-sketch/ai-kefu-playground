@@ -430,6 +430,7 @@
       removeBtn: '✕ 移除',
       timeoutErr: '回應逾時 — 請再試一次 🙏',
       serviceErr: '服務目前沒有回應 — 請稍後再試一次 🙏',
+      verifyErr: '安全驗證還沒完成，請稍等一下，或重新整理頁面再試 🙏',
       understanding: '理解中…',
       collecting: '收到 {n} 則，一起理解中…',
       btsToggle: '幕後',
@@ -461,6 +462,7 @@
       removeBtn: '✕ remove',
       timeoutErr: 'Response timed out — please try again 🙏',
       serviceErr: "The service isn't responding right now — please try again shortly 🙏",
+      verifyErr: "Security check isn't ready yet — please wait a moment, or refresh and try again 🙏",
       understanding: 'Understanding…',
       collecting: 'Got {n} messages — understanding them together…',
       btsToggle: 'Inside',
@@ -491,7 +493,7 @@
     if (cfWidgetId !== null) return;
     cfWidgetId = window.turnstile.render('#cf-turnstile', {
       sitekey: TURNSTILE_SITEKEY,
-      callback: function (t) { cfToken = t; },
+      callback: function (tok) { cfToken = tok; ensureVerified(); },
       'expired-callback': function () { cfToken = null; try { window.turnstile.reset(cfWidgetId); } catch (e) {} },
       'error-callback': function () { cfToken = null; },
     });
@@ -555,6 +557,8 @@
   let pollDeadline = 0;
   let pendingCount = 0;   // proceed messages awaiting one aggregated reply
   let lastMeta = null;    // last behind-the-scenes read
+  let verified = false;   // 開場 Turnstile 驗證是否已通過
+  let verifying = null;   // 進行中的驗證 promise（去重）
 
   const btsBtn = document.getElementById('bts-btn');
   const btsPanel = document.getElementById('bts-panel');
@@ -752,6 +756,33 @@
     });
   }
 
+  // Verify Turnstile ONCE per session (on load), then the gate trusts this session
+  // so scenario picks / rapid-fire / polling all go through without per-message tokens.
+  function ensureVerified() {
+    if (verified) return Promise.resolve(true);
+    if (verifying) return verifying;
+    verifying = (async () => {
+      // wait up to ~8s for a Turnstile token to arrive
+      let waited = 0;
+      while (!cfToken && waited < 8000) { await new Promise(r => setTimeout(r, 200)); waited += 200; }
+      if (!cfToken) { verifying = null; return false; }
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'unlock', session_id: uid, cf_token: cfToken }),
+        });
+        const data = await res.json().catch(() => ({}));
+        cfToken = null;
+        try { if (cfWidgetId !== null && window.turnstile) window.turnstile.reset(cfWidgetId); } catch (e) {}
+        verified = !!(data && data.ok);
+      } catch (e) { verified = false; }
+      verifying = null;
+      return verified;
+    })();
+    return verifying;
+  }
+
   // No hard lock — you can fire several messages in a row (that's what triggers
   // the backend's debounce + aggregation). Proceed replies come back via polling.
   async function send(text, pick) {
@@ -775,6 +806,12 @@
 
     // Optimistic indicator (updated once we know if this is a sync reply or a proceed ack)
     showThinking(pendingCount ? pendingCount + 1 : 0);
+
+    // Ensure the security check has passed once for this session (waits for a token if needed)
+    if (!verified) {
+      const ok = await ensureVerified();
+      if (!ok) { hideTyping(); addMsg('system', t().verifyErr); inputEl.focus(); return; }
+    }
 
     try {
       const controller = new AbortController();
