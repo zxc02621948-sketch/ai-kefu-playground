@@ -300,6 +300,65 @@
   #bts-btn.has-new .newdot { display: inline-block; }
   #bts-btn.active .newdot { display: none; }
 
+  /* About button (visible on desktop AND mobile) */
+  #about-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: .74rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  #about-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* About modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(3, 6, 10, .72);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    position: relative;
+    width: 100%; max-width: 560px;
+    max-height: 88vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 22px 20px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 12px;
+    border: none; background: none; color: var(--text-dim);
+    font-size: 1.05rem; cursor: pointer; padding: 4px 6px;
+  }
+  .modal-close:hover { color: var(--text); }
+  #about-body h3 { font-size: 1.15rem; margin-bottom: 10px; color: var(--text); }
+  #about-body p { font-size: .9rem; line-height: 1.65; color: var(--text-dim); margin-bottom: 12px; }
+  #about-body .about-h-title {
+    font-size: .74rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 4px 0 8px;
+  }
+  #about-body ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  #about-body li {
+    font-size: .88rem; line-height: 1.55; color: var(--text);
+    padding-left: 16px; position: relative;
+  }
+  #about-body li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+  #about-body .about-stack { font-size: .82rem; color: var(--text-dim); }
+  #about-body .about-by { font-size: .85rem; color: var(--text); margin-bottom: 0; }
+  #about-body .about-by a { color: var(--accent); text-decoration: none; }
+  #about-body .about-by a:hover { text-decoration: underline; }
+
   /* ── Behind-the-scenes panel ── */
   #chat-col { display: flex; flex-direction: column; flex: 1; min-width: 0; height: 100%; }
 
@@ -373,6 +432,7 @@
       <h1><span class="dot"></span><span id="h-title"></span></h1>
       <p id="h-sub"></p>
     </div>
+    <button id="about-btn" type="button"><span>ⓘ</span><span id="about-btn-label"></span></button>
     <button id="bts-btn" type="button"><span>🔍</span><span id="bts-btn-label"></span><span class="newdot"></span></button>
     <div class="lang-toggle" role="group" aria-label="Language / 語言">
       <button type="button" data-lang="zh">中</button>
@@ -400,15 +460,24 @@
     <button id="bts-close" type="button" aria-label="close">✕</button>
     <div id="bts-content"></div>
   </aside>
+
+  <div id="about-modal" class="modal-backdrop">
+    <div class="modal">
+      <button id="about-close" class="modal-close" type="button" aria-label="close">✕</button>
+      <div id="about-body"></div>
+    </div>
+  </div>
 </div>
 
 <script>
 (function () {
-  /* ════════ Config: only these lines ════════ */
+  /* ════════ Config ════════ */
   const WEBHOOK_URL  = 'https://kefu-gate.zxc02621948.workers.dev';
   const CONTACT_URL  = 'https://www.facebook.com/profile.php?id=61573305406231'; // AI創界 page (can upgrade to m.me/username later)
   const TURNSTILE_SITEKEY = '0x4AAAAAADkdGWequXxB-oSF';
-  /* ══════════════════════════════════════ */
+  const GITHUB_URL    = 'https://github.com/zxc02621948-sketch/ai-kefu-playground';
+  const PORTFOLIO_URL = 'https://kuanming-portfolio.onrender.com/';
+  /* ════════════════════════ */
 
   /* ════════ i18n: 繁體中文 / English ════════ */
   const I18N = {
@@ -416,7 +485,24 @@
       htmlLang: 'zh-Hant',
       docTitle: 'AI 客服體驗場 — 來考倒它',
       headerTitle: 'AI 客服體驗場',
-      headerSub: '一個真正上線中的 AI 客服 — 開放試玩。你是客人，它來接待你，每人 10 則訊息。',
+      headerSub: '我打造並實際部署在店家的 AI 客服系統，開放你親自體驗。點右上「關於」看背後的技術。',
+      aboutBtn: '關於',
+      about: {
+        title: '關於這個專案',
+        intro: '這是我從零打造、真正上線中的 AI 客服系統，實際跑在店家的 Facebook Messenger 與官方網站上（客戶是一家中部的木作裝修公司）。你現在體驗的就是同一套引擎。',
+        hiTitle: '技術亮點',
+        hi: [
+          '多租戶架構：一份工作流服務多家店，靠 page_id 分流，各店設定與知識庫從 PostgreSQL 讀取。',
+          '聚合訊息：客人連發多則會自動去抖動、合併成一次理解（你剛剛體驗到的）。',
+          '結構化判讀 + 自動名單：即時判斷意圖、抽取姓名／電話／需求，成熟時轉真人（右側「幕後」面板看得到）。',
+          '非同步佇列：Web 版用即時 ack + 輪詢、Messenger 版用 Send API 非同步推送。',
+          '看圖回覆、中英雙語、出錯兜底，老闆還能用對話式 bot 自然語改設定與知識。',
+        ],
+        stack: '技術棧：n8n · PostgreSQL · OpenAI · Cloudflare Workers / Turnstile',
+        by: '打造者',
+        byName: '陳冠名',
+        portfolio: '作品集／履歷',
+      },
       placeholder: '輸入訊息…',
       attachTitle: '傳一張照片',
       attachAria: '附加照片',
@@ -448,7 +534,24 @@
       htmlLang: 'en',
       docTitle: 'AI Customer Service Playground — try to stump it',
       headerTitle: 'AI Customer Service Playground',
-      headerSub: "A real, deployed AI customer-service agent — open to try. You're the customer, it handles you. 10 messages each.",
+      headerSub: "An AI customer-service system I built and deployed for real shops — try it yourself. Tap “About” for the tech behind it.",
+      aboutBtn: 'About',
+      about: {
+        title: 'About this project',
+        intro: "An AI customer-service system I built from scratch and deployed for real — it runs live on a shop's Facebook Messenger and website (a carpentry & renovation firm in central Taiwan). What you're using here is the same engine.",
+        hiTitle: 'Engineering highlights',
+        hi: [
+          'Multi-tenant: one workflow serves many shops, routed by page_id, with each shop’s config & knowledge read from PostgreSQL.',
+          'Message aggregation: rapid consecutive messages are debounced and understood together (what you just tried).',
+          'Structured reading + auto lead capture: real-time intent detection, extracts name/phone/needs, hands off to a human when ready (see the “Behind the scenes” panel).',
+          'Async queue: the web app uses ack + polling; Messenger uses async push via the Send API.',
+          'Image understanding, bilingual, graceful fallbacks — plus a chat bot the owner uses to edit settings & knowledge in plain language.',
+        ],
+        stack: 'Stack: n8n · PostgreSQL · OpenAI · Cloudflare Workers / Turnstile',
+        by: 'Built by',
+        byName: 'Chen Guan-Ming',
+        portfolio: 'Portfolio',
+      },
       placeholder: 'Type a message…',
       attachTitle: 'Send a photo',
       attachAria: 'Attach photo',
@@ -523,6 +626,7 @@
       b.classList.toggle('active', b.dataset.lang === lang);
     });
     renderPanel();
+    renderAbout();
   }
 
   function setLang(l) {
@@ -563,6 +667,9 @@
   const btsBtn = document.getElementById('bts-btn');
   const btsPanel = document.getElementById('bts-panel');
   const btsContent = document.getElementById('bts-content');
+  const aboutBtn = document.getElementById('about-btn');
+  const aboutModal = document.getElementById('about-modal');
+  const aboutBody = document.getElementById('about-body');
 
   function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -639,6 +746,29 @@
     btsPanel.classList.remove('open');
     btsBtn.classList.remove('active');
   });
+
+  // ── About modal (project positioning + tech highlights, for recruiters & clients) ──
+  function renderAbout() {
+    const a = t().about;
+    document.getElementById('about-btn-label').textContent = t().aboutBtn;
+    aboutBtn.title = a.title;
+    let byLine = escapeHtml(a.by) + ': ' + escapeHtml(a.byName)
+      + ' · <a href="' + GITHUB_URL + '" target="_blank" rel="noopener">GitHub</a>';
+    if (PORTFOLIO_URL) {
+      byLine += ' · <a href="' + PORTFOLIO_URL + '" target="_blank" rel="noopener">' + escapeHtml(a.portfolio) + '</a>';
+    }
+    aboutBody.innerHTML =
+      '<h3>' + escapeHtml(a.title) + '</h3>'
+      + '<p>' + escapeHtml(a.intro) + '</p>'
+      + '<div class="about-h-title">' + escapeHtml(a.hiTitle) + '</div>'
+      + '<ul>' + a.hi.map(x => '<li>' + escapeHtml(x) + '</li>').join('') + '</ul>'
+      + '<p class="about-stack">' + escapeHtml(a.stack) + '</p>'
+      + '<p class="about-by">' + byLine + '</p>';
+  }
+  aboutBtn.addEventListener('click', () => { renderAbout(); aboutModal.classList.add('open'); });
+  document.getElementById('about-close').addEventListener('click', () => aboutModal.classList.remove('open'));
+  aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') aboutModal.classList.remove('open'); });
 
   // ── Polling for the aggregated reply (async ack model) ──
   function startPolling() {
