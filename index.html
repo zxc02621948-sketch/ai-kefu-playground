@@ -733,12 +733,12 @@
     const wrap = document.createElement('div');
     wrap.id = 'scenarios';
     const c1 = document.createElement('button');
-    c1.className = 'scenario-card'; c1.dataset.pick = '1';
+    c1.className = 'scenario-card'; c1.dataset.mode = 'self'; c1.dataset.title = s.card1Title;
     c1.innerHTML = '<b></b>';
     c1.querySelector('b').textContent = s.card1Title;
     c1.appendChild(document.createTextNode(s.card1Body));
     const c2 = document.createElement('button');
-    c2.className = 'scenario-card'; c2.dataset.pick = '2';
+    c2.className = 'scenario-card'; c2.dataset.mode = 'fulijie'; c2.dataset.title = s.card2Title;
     c2.innerHTML = '<b></b>';
     c2.querySelector('b').textContent = s.card2Title;
     c2.appendChild(document.createTextNode(s.card2Body));
@@ -747,16 +747,16 @@
     wrap.querySelectorAll('.scenario-card').forEach(btn => {
       btn.addEventListener('click', () => {
         wrap.remove();
-        send(btn.dataset.pick);
+        send(btn.dataset.title, btn.dataset.mode); // 明確場景訊號，不再送醜醜的「1」
       });
     });
   }
 
   // No hard lock — you can fire several messages in a row (that's what triggers
   // the backend's debounce + aggregation). Proceed replies come back via polling.
-  async function send(text) {
+  async function send(text, pick) {
     text = (text || '').trim();
-    if (!text && !pendingImage) return;
+    if (!text && !pendingImage && !pick) return;
 
     const userMsg = addMsg('user', text);
     const imageToSend = pendingImage;
@@ -783,7 +783,7 @@
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send', message: text, session_id: uid, cf_token: sendToken, image: imageToSend || null, lang: lang }),
+        body: JSON.stringify({ action: 'send', message: text, session_id: uid, cf_token: sendToken, image: imageToSend || null, lang: lang, pick: pick || undefined }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
